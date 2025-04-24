@@ -20,6 +20,9 @@ class RideStatusUpdate(BaseModel):
     ride_id: int
     status: str  # ongoing, completed, cancelled
 
+from app.utils.websocket_manager import ws_manager
+import asyncio
+
 @router.post("/user/request-ride")
 def request_ride(data: RideRequest, token: str = Depends(oauth2_scheme)):
     payload = decode_access_token(token)
@@ -28,7 +31,14 @@ def request_ride(data: RideRequest, token: str = Depends(oauth2_scheme)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     ride = create_ride(user.id, data.pickup_location, data.drop_location)
+
+    # Notify drivers
+    asyncio.create_task(ws_manager.broadcast(
+        f"New Ride Request: {ride.pickup_location} -> {ride.drop_location} | ID: {ride.id}"
+    ))
+
     return {"ride_id": ride.id, "status": ride.status}
+
 
 @router.get("/driver/pending-rides")
 def list_pending_rides():

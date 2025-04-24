@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head><title>Driver Notification</title></head>
+<body>
+  <h2>Driver Ride Alerts</h2>
+  <ul id="notifications"></ul>
+
+  <script>
+    const socket = new WebSocket("ws://localhost:8000/ws/driver");
+    socket.onmessage = function(event) {
+      const li = document.createElement("li");
+      li.innerText = event.data;
+      document.getElementById("notifications").appendChild(li);
+    };
+  </script>
+</body>
+</html>
